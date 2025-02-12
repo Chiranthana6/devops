@@ -1,0 +1,63 @@
+import java.net.*;
+
+public class UDPclient {
+    public static void main(String[] args) throws Exception {
+        byte[] buf = new byte[1024]; 
+        System.out.println("Receiver started...");
+        
+        
+        DatagramSocket ds = new DatagramSocket(3000);
+
+        while (true) {
+            
+            DatagramPacket dp = new DatagramPacket(buf, buf.length);
+            ds.receive(dp); 
+
+            
+            String msg = new String(dp.getData(), 0, dp.getLength());
+            System.out.println("Received: " + msg);
+
+            
+            if (msg.equalsIgnoreCase("exit")) {
+                System.out.println("Receiver shutting down...");
+                break;
+            }
+        }
+
+        ds.close()
+    }
+}
+
+
+
+import java.net.*;
+import java.util.Scanner;
+
+public class UDPserver {
+    public static void main(String[] args) throws Exception {
+        System.out.println("Sender started...");
+        
+        
+        DatagramSocket ds = new DatagramSocket();
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.print("Enter the message (type 'exit' to quit): ");
+            String msg = scanner.nextLine(); 
+
+            
+            InetAddress ip = InetAddress.getByName("127.0.0.1");
+            DatagramPacket dp = new DatagramPacket(msg.getBytes(), msg.length(), ip, 3000);
+            ds.send(dp);
+
+            
+            if (msg.equalsIgnoreCase("exit")) {
+                System.out.println("Sender shutting down...");
+                break;
+            }
+        }
+
+        scanner.close(); 
+        ds.close(); 
+    }
+}

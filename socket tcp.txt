@@ -1,0 +1,77 @@
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+public class TCPClient {
+    public static void main(String[] args) {
+        try (
+            Scanner scanner = new Scanner(System.in);
+            Socket socket = new Socket("127.0.0.1", 6000);
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            DataInputStream in = new DataInputStream(socket.getInputStream());
+        ) {
+            System.out.println("Client Connected to Server");
+
+            // Request filename from user
+            System.out.print("\nEnter the filename to request: ");
+            String filename = scanner.nextLine();
+            out.writeUTF(filename); // Send filename to server
+
+            // Read the server's response
+            String fileContent = in.readUTF();
+            if (!fileContent.isEmpty()) {
+                System.out.println("File Content:\n" + fileContent);
+            } else {
+                System.out.println("FILE IS EMPTY");
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Error: The requested file was not found on the server.");
+        } catch (IOException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+}
+
+
+
+import java.io.*;
+import java.net.*;
+import java.nio.file.*;
+
+public class TCPServer {
+    public static void main(String[] args) {
+        try (
+            ServerSocket server = new ServerSocket(6000);
+        ) {
+            System.out.println("Server Waiting for client");
+
+            // Accept client connection
+            Socket socket = server.accept();
+            System.out.println("Client connected");
+
+            try (
+                DataInputStream in = new DataInputStream(socket.getInputStream());
+                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            ) {
+                // Read the filename requested by the client
+                String fileName = in.readUTF();
+                System.out.println("File Requested is: " + fileName);
+
+                try {
+                    // Read file content
+                    byte[] fileData = Files.readAllBytes(Paths.get(fileName));
+                    String fileContent = new String(fileData);
+
+                    // Send the file content to the client
+                    out.writeUTF(fileContent);
+                    System.out.println("FILE SENT SUCCESSFULLY");
+                } catch (IOException e) {
+                    System.out.println("File not found: " + fileName);
+                    out.writeUTF(""); // Send empty response for missing files
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Server Error: " + e.getMessage());
+        }
+    }
+}
